@@ -301,6 +301,32 @@ function rz_rehab_customize_register( $wp_customize ) {
             'type'     => 'text',
         ) );
     }
+
+    // Reviews Section (About)
+    $wp_customize->add_section( 'rz_reviews_section' , array(
+        'title'      => 'Відгуки клієнтів',
+        'priority'   => 38,
+    ) );
+
+    $review_fields = [
+        'rz_review_1_text_uk' => 'Відгук 1 (UKR)',
+        'rz_review_1_text_en' => 'Відгук 1 (ENG)',
+        'rz_review_1_author_uk' => 'Автор 1 (UKR)',
+        'rz_review_1_author_en' => 'Автор 1 (ENG)',
+        'rz_review_2_text_uk' => 'Відгук 2 (UKR)',
+        'rz_review_2_text_en' => 'Відгук 2 (ENG)',
+        'rz_review_2_author_uk' => 'Автор 2 (UKR)',
+        'rz_review_2_author_en' => 'Автор 2 (ENG)',
+    ];
+
+    foreach ($review_fields as $id => $label) {
+        $wp_customize->add_setting( $id, array('default' => '', 'type' => 'option') );
+        $wp_customize->add_control( $id, array(
+            'label'    => $label,
+            'section'  => 'rz_reviews_section',
+            'type'     => strpos($id, 'text') !== false ? 'textarea' : 'text',
+        ) );
+    }
 }
 add_action( 'customize_register', 'rz_rehab_customize_register' );
 
@@ -637,14 +663,26 @@ function rz_render_about() {
                 </div>
                 <div class="about-reviews animate-up">
                     <h3><?php echo rz_t('Відгуки клієнтів', 'Reviews'); ?></h3>
-                    <div class="review-card">
-                        <p><?php echo rz_t('"Дуже вдячна за допомогу! Поставили на ноги за два місяці після складної операції."', '"Very grateful for the help! Recovered in two months after a complex surgery."'); ?></p>
-                        <cite>— <?php echo rz_t('Олена М.', 'Olena M.'); ?></cite>
-                    </div>
-                    <div class="review-card">
-                        <p><?php echo rz_t('"Мій син із задоволенням ходить на заняття з сенсорної інтеграції. Результат помітно вже за місяць!"', '"My son enjoys sensory integration sessions. The result is visible in a month!"'); ?></p>
-                        <cite>— <?php echo rz_t('Тетяна К.', 'Tetiana K.'); ?></cite>
-                    </div>
+                    <?php 
+                    $lang = rz_get_lang();
+                    for ($i = 1; $i <= 2; $i++) {
+                        $rev_text = get_option("rz_review_{$i}_text_{$lang}");
+                        $rev_author = get_option("rz_review_{$i}_author_{$lang}");
+                        
+                        // Fallbacks for initial view
+                        if (!$rev_text && $i == 1) $rev_text = rz_t('"Дуже вдячна за допомогу! Поставили на ноги за два місяці після складної операції."', '"Very grateful for the help! Recovered in two months after a complex surgery."');
+                        if (!$rev_author && $i == 1) $rev_author = rz_t('Олена М.', 'Olena M.');
+                        if (!$rev_text && $i == 2) $rev_text = rz_t('"Мій син із задоволенням ходить на заняття з сенсорної інтеграції. Результат помітно вже за місяць!"', '"My son enjoys sensory integration sessions. The result is visible in a month!"');
+                        if (!$rev_author && $i == 2) $rev_author = rz_t('Тетяна К.', 'Tatiana K.');
+
+                        if ($rev_text) : ?>
+                            <div class="review-card">
+                                <p><?php echo esc_html($rev_text); ?></p>
+                                <cite>— <?php echo esc_html($rev_author); ?></cite>
+                            </div>
+                        <?php endif;
+                    } 
+                    ?>
                 </div>
             </div>
         </div>
