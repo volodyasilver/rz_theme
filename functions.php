@@ -102,6 +102,16 @@ function rz_rehab_add_meta_boxes() {
         <p><label>Вартість консультації:</label><br><input type="text" name="rz_price_consultation" value="<?php echo esc_attr(get_post_meta($post->ID, '_rz_price_consultation', true)); ?>" class="regular-text"></p>
         <p><label>Абонемент 5 занять:</label><br><input type="text" name="rz_price_5" value="<?php echo esc_attr(get_post_meta($post->ID, '_rz_price_5', true)); ?>" class="regular-text"></p>
         <p><label>Абонемент 10 занять:</label><br><input type="text" name="rz_price_10" value="<?php echo esc_attr(get_post_meta($post->ID, '_rz_price_10', true)); ?>" class="regular-text"></p>
+        <hr>
+        <p><label>Зображення послуги:</label><br>
+            <?php $image_id = get_post_meta($post->ID, '_rz_image_id', true); ?>
+            <div class="rz-image-preview" style="margin-bottom: 10px;">
+                <?php if ($image_id) echo wp_get_attachment_image($image_id, 'thumbnail'); ?>
+            </div>
+            <input type="hidden" name="rz_image_id" id="rz_image_id" value="<?php echo esc_attr($image_id); ?>">
+            <button type="button" class="button rz-upload-image" data-title="Оберіть зображення" data-btn="Використовувати">Обрати зображення</button>
+            <button type="button" class="button rz-remove-image" <?php if (!$image_id) echo 'style="display:none;"'; ?>>Видалити</button>
+        </p>
         <?php
     }, 'rz_service', 'normal', 'high');
 
@@ -131,7 +141,8 @@ function rz_rehab_save_meta_boxes($post_id) {
         'rz_duration_en', 'rz_price_en', 'rz_price_consultation_en', 'rz_price_5_en', 'rz_price_10_en',
         'rz_how_it_works', 'rz_results', 'rz_indications', 'rz_contraindications',
         'rz_duration', 'rz_price', 'rz_price_consultation', 'rz_price_5', 'rz_price_10',
-        'rz_sub_price', 'rz_sub_price_en', 'rz_sub_duration', 'rz_sub_duration_en', 'rz_sub_features', 'rz_sub_features_en'
+        'rz_sub_price', 'rz_sub_price_en', 'rz_sub_duration', 'rz_sub_duration_en', 'rz_sub_features', 'rz_sub_features_en',
+        'rz_image_id'
     ];
     foreach ($fields as $field) {
         if (isset($_POST[$field])) {
@@ -140,6 +151,39 @@ function rz_rehab_save_meta_boxes($post_id) {
     }
 }
 add_action('save_post', 'rz_rehab_save_meta_boxes');
+
+/**
+ * Handle Admin Image Uploader JS
+ */
+function rz_admin_scripts() {
+    ?>
+    <script>
+    jQuery(document).ready(function($){
+        $('.rz-upload-image').click(function(e) {
+            e.preventDefault();
+            var button = $(this);
+            var custom_uploader = wp.media({
+                title: button.data('title'),
+                button: { text: button.data('btn') },
+                multiple: false
+            }).on('select', function() {
+                var attachment = custom_uploader.state().get('selection').first().toJSON();
+                $('.rz-image-preview').html('<img src="' + attachment.url + '" style="max-width:150px;height:auto;display:block;">');
+                $('#rz_image_id').val(attachment.id);
+                $('.rz-remove-image').show();
+            }).open();
+        });
+
+        $('.rz-remove-image').click(function() {
+            $('.rz-image-preview').html('');
+            $('#rz_image_id').val('');
+            $(this).hide();
+        });
+    });
+    </script>
+    <?php
+}
+add_action('admin_footer', 'rz_admin_scripts');
 
 /**
  * Customizer Settings
@@ -405,6 +449,10 @@ function rz_rehab_scripts() {
     $version = time(); // Dynamic version to bust cache during transfer
     wp_enqueue_style( 'rz-rehab-style', get_stylesheet_uri(), array(), $version );
     wp_enqueue_script( 'rz-rehab-scripts', get_template_directory_uri() . '/js/main.js', array(), $version, true );
+    
+    if (is_admin()) {
+        wp_enqueue_media();
+    }
 }
 add_action( 'wp_enqueue_scripts', 'rz_rehab_scripts' );
 
@@ -487,8 +535,13 @@ function rz_render_services() {
                         ?>
                         <div class="service-card animate-up">
                             <div class="service-image">
-                                <?php if (has_post_thumbnail()) : the_post_thumbnail('large'); 
-                                      elseif (!empty($img_file)) : ?>
+                                <?php 
+                                $custom_img_id = get_post_meta($id, '_rz_image_id', true);
+                                if ($custom_img_id) : 
+                                    echo wp_get_attachment_image($custom_img_id, 'large');
+                                elseif (has_post_thumbnail()) : 
+                                    the_post_thumbnail('large'); 
+                                elseif (!empty($img_file)) : ?>
                                     <img src="<?php echo get_template_directory_uri(); ?>/images/<?php echo esc_attr($img_file); ?>" alt="<?php echo esc_attr($title); ?>">
                                 <?php else : ?>
                                     <img src="<?php echo get_template_directory_uri(); ?>/images/physical_therapy.png" alt="">
