@@ -210,6 +210,53 @@ function rz_rehab_customize_register( $wp_customize ) {
             'type'     => strpos($id, 'desc') !== false ? 'textarea' : 'text',
         ) );
     }
+
+    // Social Media Section
+    $wp_customize->add_section( 'rz_social_section' , array(
+        'title'      => 'Соціальні мережі',
+        'priority'   => 40,
+    ) );
+
+    $social_links = [
+        'rz_social_instagram' => 'Instagram URL',
+        'rz_social_facebook' => 'Facebook URL',
+        'rz_social_telegram' => 'Telegram URL',
+        'rz_social_youtube' => 'YouTube URL',
+        'rz_social_tiktok' => 'TikTok URL',
+    ];
+
+    foreach ($social_links as $id => $label) {
+        $wp_customize->add_setting( $id, array('default' => '', 'type' => 'option') );
+        $wp_customize->add_control( $id, array(
+            'label'    => $label,
+            'section'  => 'rz_social_section',
+            'type'     => 'url',
+        ) );
+    }
+
+    // Contact Info Section
+    $wp_customize->add_section( 'rz_contact_section' , array(
+        'title'      => 'Контактна інформація',
+        'priority'   => 45,
+    ) );
+
+    $contact_fields = [
+        'rz_phone_1' => 'Телефон 1',
+        'rz_phone_2' => 'Телефон 2',
+        'rz_email' => 'Email',
+        'rz_address_uk' => 'Адреса (УКР)',
+        'rz_address_en' => 'Адреса (ENG)',
+        'rz_edrpou' => 'ЄДРПОУ',
+    ];
+
+    foreach ($contact_fields as $id => $label) {
+        $wp_customize->add_setting( $id, array('default' => '', 'type' => 'option') );
+        $wp_customize->add_control( $id, array(
+            'label'    => $label,
+            'section'  => 'rz_contact_section',
+            'type'     => 'text',
+        ) );
+    }
 }
 add_action( 'customize_register', 'rz_rehab_customize_register' );
 
@@ -329,6 +376,8 @@ function rz_rehab_settings_init() {
     register_setting('general', 'rz_social_instagram');
     register_setting('general', 'rz_social_facebook');
     register_setting('general', 'rz_social_telegram');
+    register_setting('general', 'rz_social_youtube');
+    register_setting('general', 'rz_social_tiktok');
 
     add_settings_field('rz_social_instagram', 'Instagram URL', function() {
         echo '<input type="url" name="rz_social_instagram" value="' . esc_attr(get_option('rz_social_instagram')) . '" class="regular-text">';
@@ -340,6 +389,14 @@ function rz_rehab_settings_init() {
 
     add_settings_field('rz_social_telegram', 'Telegram URL', function() {
         echo '<input type="url" name="rz_social_telegram" value="' . esc_attr(get_option('rz_social_telegram')) . '" class="regular-text">';
+    }, 'general', 'rz_rehab_section');
+
+    add_settings_field('rz_social_youtube', 'YouTube URL', function() {
+        echo '<input type="url" name="rz_social_youtube" value="' . esc_attr(get_option('rz_social_youtube')) . '" class="regular-text">';
+    }, 'general', 'rz_rehab_section');
+
+    add_settings_field('rz_social_tiktok', 'TikTok URL', function() {
+        echo '<input type="url" name="rz_social_tiktok" value="' . esc_attr(get_option('rz_social_tiktok')) . '" class="regular-text">';
     }, 'general', 'rz_rehab_section');
 }
 add_action('admin_init', 'rz_rehab_settings_init');

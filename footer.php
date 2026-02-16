@@ -36,6 +36,12 @@
                     <?php if ($tg = get_option('rz_social_telegram')) : ?>
                         <a href="<?php echo esc_url($tg); ?>" target="_blank">Telegram</a>
                     <?php endif; ?>
+                    <?php if ($yt = get_option('rz_social_youtube')) : ?>
+                        <a href="<?php echo esc_url($yt); ?>" target="_blank">YouTube</a>
+                    <?php endif; ?>
+                    <?php if ($tt = get_option('rz_social_tiktok')) : ?>
+                        <a href="<?php echo esc_url($tt); ?>" target="_blank">TikTok</a>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="footer-col booking">
