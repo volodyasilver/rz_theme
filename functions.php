@@ -10,6 +10,7 @@ function rz_t($uk, $en) {
 }
 
 function rz_get_lang() {
+    if (get_option('rz_disable_en') === '1') return 'uk';
     return isset($_GET['lang']) && $_GET['lang'] === 'en' ? 'en' : 'uk';
 }
 
@@ -153,6 +154,21 @@ function rz_rehab_save_meta_boxes($post_id) {
 add_action('save_post', 'rz_rehab_save_meta_boxes');
 
 /**
+ * Format price with currency
+ */
+function rz_format_price($price) {
+    if (empty($price)) return '';
+    
+    // If it's already got currency or isn't just a number, return as is
+    if (!is_numeric(str_replace(' ', '', $price))) {
+        return $price;
+    }
+    
+    $currency = (rz_get_lang() === 'en') ? ' UAH' : ' грн';
+    return $price . $currency;
+}
+
+/**
  * Handle Admin Image Uploader JS
  */
 function rz_admin_scripts() {
@@ -277,6 +293,19 @@ function rz_rehab_customize_register( $wp_customize ) {
             'type'     => 'url',
         ) );
     }
+
+    // Language Settings
+    $wp_customize->add_section( 'rz_lang_section' , array(
+        'title'      => 'Мовні налаштування',
+        'priority'   => 20,
+    ) );
+
+    $wp_customize->add_setting( 'rz_disable_en', array('default' => '', 'type' => 'option') );
+    $wp_customize->add_control( 'rz_disable_en', array(
+        'label'    => 'Вимкнути англійську версію сайту',
+        'section'  => 'rz_lang_section',
+        'type'     => 'checkbox',
+    ) );
 
     // Contact Info Section
     $wp_customize->add_section( 'rz_contact_section' , array(
@@ -608,10 +637,10 @@ function rz_render_services() {
                                             $p_5 = $is_en ? get_post_meta($id, '_rz_price_5_en', true) : get_post_meta($id, '_rz_price_5', true);
                                             $p_10 = $is_en ? get_post_meta($id, '_rz_price_10_en', true) : get_post_meta($id, '_rz_price_10', true);
                                             
-                                            if ($p_cons) echo '<li><strong>' . rz_t('Консультація', 'Consultation') . ':</strong> ' . esc_html($p_cons) . '</li>';
-                                            if ($p_sess) echo '<li><strong>' . rz_t('Разове заняття', 'Single Session') . ':</strong> ' . esc_html($p_sess) . '</li>';
-                                            if ($p_5) echo '<li><strong>' . rz_t('Абонемент 5 занять', '5-Session Pack') . ':</strong> ' . esc_html($p_5) . '</li>';
-                                            if ($p_10) echo '<li><strong>' . rz_t('Абонемент 10 занять', '10-Session Pack') . ':</strong> ' . esc_html($p_10) . '</li>';
+                                            if ($p_cons) echo '<li><strong>' . rz_t('Консультація', 'Consultation') . ':</strong> ' . esc_html(rz_format_price($p_cons)) . '</li>';
+                                            if ($p_sess) echo '<li><strong>' . rz_t('Разове заняття', 'Single Session') . ':</strong> ' . esc_html(rz_format_price($p_sess)) . '</li>';
+                                            if ($p_5) echo '<li><strong>' . rz_t('Абонемент 5 занять', '5-Session Pack') . ':</strong> ' . esc_html(rz_format_price($p_5)) . '</li>';
+                                            if ($p_10) echo '<li><strong>' . rz_t('Абонемент 10 занять', '10-Session Pack') . ':</strong> ' . esc_html(rz_format_price($p_10)) . '</li>';
                                             ?>
                                         </ul>
                                     </div>
@@ -746,10 +775,10 @@ function rz_render_pricing() {
                                 <tr>
                                     <td data-label="<?php echo rz_t('Послуга', 'Service'); ?>"><?php echo esc_html($title); ?></td>
                                     <td data-label="<?php echo rz_t('Тривалість', 'Duration'); ?>"><?php echo esc_html($duration); ?></td>
-                                    <td data-label="<?php echo rz_t('Консультація', 'Consultation'); ?>"><?php echo esc_html($is_en ? get_post_meta($id, '_rz_price_consultation_en', true) : get_post_meta($id, '_rz_price_consultation', true)); ?></td>
-                                    <td data-label="<?php echo rz_t('Заняття', 'Session'); ?>"><?php echo esc_html($price); ?></td>
-                                    <td data-label="<?php echo rz_t('5 занять', '5 Sessions'); ?>"><?php echo esc_html($is_en ? get_post_meta($id, '_rz_price_5_en', true) : get_post_meta($id, '_rz_price_5', true)); ?></td>
-                                    <td data-label="<?php echo rz_t('10 занять', '10 Sessions'); ?>"><?php echo esc_html($is_en ? get_post_meta($id, '_rz_price_10_en', true) : get_post_meta($id, '_rz_price_10', true)); ?></td>
+                                    <td data-label="<?php echo rz_t('Консультація', 'Consultation'); ?>"><?php echo esc_html(rz_format_price($is_en ? get_post_meta($id, '_rz_price_consultation_en', true) : get_post_meta($id, '_rz_price_consultation', true))); ?></td>
+                                    <td data-label="<?php echo rz_t('Заняття', 'Session'); ?>"><?php echo esc_html(rz_format_price($price)); ?></td>
+                                    <td data-label="<?php echo rz_t('5 занять', '5 Sessions'); ?>"><?php echo esc_html(rz_format_price($is_en ? get_post_meta($id, '_rz_price_5_en', true) : get_post_meta($id, '_rz_price_5', true))); ?></td>
+                                    <td data-label="<?php echo rz_t('10 занять', '10 Sessions'); ?>"><?php echo esc_html(rz_format_price($is_en ? get_post_meta($id, '_rz_price_10_en', true) : get_post_meta($id, '_rz_price_10', true))); ?></td>
                                 </tr>
                             <?php 
                             endwhile;
